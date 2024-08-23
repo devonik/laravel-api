@@ -1,35 +1,24 @@
-version: "3"
-
-networks:
-  laravel:
-    driver: bridge
-
+version: '3'
 services:
-  nginx:
-    image: nginx:alpine
-    container_name: nginx
-    restart: unless-stopped
-    tty: true
-    ports:
-      - "7000:80"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - .:/var/www/app:delegated
-    depends_on:
-      - php
-    networks:
-      - laravel
 
-  php:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: php
-    restart: unless-stopped
-    tty: true
-    expose:
-      - "9000"
-    volumes:
-      - .:/var/www/app:delegated
+  laravel-api:
+    image: dragoono/laravel-api:1.0.1
+    container_name: laravel-api
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.laravel-api.rule=Host(`laravel-api.devnik.dev`)"
+      - "traefik.http.routers.laravel-api.entrypoints=websecure"
+      - "traefik.http.routers.laravel-api.tls.certresolver=devnik-resolver"
     networks:
-      - laravel
+      - proxy
+    environment:
+      TZ: Europe/Berlin
+      APP_URL: http://localhost
+      APP_ENV: local
+
+#Docker Networks
+networks:
+  proxy:
+    external:
+      name: "traefik_proxy"

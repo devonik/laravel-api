@@ -1,32 +1,28 @@
-# use PHP 8.2
-FROM php:8.2-fpm
+FROM amd64/php:8.2-fpm
 
-# Install common php extension dependencies
-RUN apt-get update && apt-get install -y \
+RUN curl -sS https://getcomposer.org/installer | php -- \
+     --install-dir=/usr/local/bin --filename=composer
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+RUN apt-get update && apt-get install -y zlib1g-dev \
+    libzip-dev \
     libfreetype-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
-    zlib1g-dev \
-    libzip-dev \
-    unzip \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd \
-    && docker-php-ext-install zip
+    unzip
 
-# Set the working directory
-COPY . /var/www/app
-WORKDIR /var/www/app
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+&& docker-php-ext-install pdo pdo_mysql sockets zip -j$(nproc) gd
 
-RUN chown -R www-data:www-data /var/www/app \
-    && chmod -R 775 /var/www/app/storage
+RUN mkdir /app
 
+ADD . /app
 
-# install composer
-COPY --from=composer:2.6.5 /usr/bin/composer /usr/local/bin/composer
+WORKDIR /app
 
-# copy composer.json to workdir & install dependencies
-COPY composer.json ./
 RUN composer install
 
-# Set the default command to run php-fpm
-CMD ["php-fpm"]
+CMD php artisan serve --host=0.0.0.0 --port=80
+
+EXPOSE 80
