@@ -1,0 +1,23 @@
+version: '3'
+services:
+
+  #Craft CMS
+  laravel-upljft-api:
+    image: 'registry.gitlab.com/devnik/laravel-api/main:latest'
+    container_name: laravel_api
+    restart: always
+    ports:
+      - '8000:8000'
+    tty: true
+    networks:
+      - proxy
+    environment:
+      TZ: Europe/Berlin
+      SERVICE_NAME: php
+      SERVICE_TAGS: dev
+
+#Docker Networks
+networks:
+  proxy:
+    external:
+      name: "traefik_proxy"

@@ -1,0 +1,74 @@
+#
+# https://gitlab.com/gitlab-org/gitlab-foss/tree/master/lib/gitlab/ci/templates/PHP.gitlab-ci.yml
+#
+# No need to explicitly write this on your .gitlab-ci.yml file.
+# Add and edit if you want different stage configurations.
+stages:
+  - build
+  - deploy
+
+services:
+  # needed - otherwise we getting error like:
+  # error during connect: Post http://docker:2375/v1.40/auth: dial tcp: lookup docker on 169.254.169.254:53: no such host
+  - docker:dind
+
+cache:
+
+  # The variable CI_COMMIT_REF_SLUG
+  # refers to the slug of the branch.
+  # For example: `master` for the master branch.
+  # We use the `composer` suffix to avoid conflicts with
+  # the `npm` cache that we'll define next.
+  key: ${CI_COMMIT_REF_SLUG}-composer
+
+  # Define what to cache.
+  paths:
+    - vendor
+    - node_modules
+
+# The job's name.
+packaging:
+  # The job's stage (build, test or deploy).
+  stage: build
+  image: edbizarro/gitlab-ci-pipeline-php:7.3-alpine
+  # What to run on the job.
+  script:
+    #Create a env file with the gitlab variables
+    # need to do it as sudo with this image otherwise we get: chmod: ./setup_env.sh: Operation not permitted
+    # TODO Commented cause: Somehow the env is empty here ? Defuck ??? Somehow gitlab dont fill the variables here
+    #- sudo chmod +x ./setup_env.sh
+    #- sudo ./setup_env.sh
+    - composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
+    - npm install
+  artifacts:
+
+    # (Optional) Give it an expiration date,
+    # after that period you won't be able to
+    # download them via the UI anymore.
+    expire_in: 7 days
+
+    # Define what to output from the job.
+    paths:
+      - vendor/
+      - node_modules/
+  only:
+    - develop
+    - master
+
+docker-build:
+  image: docker:latest
+  stage: deploy
+  dependencies:
+    - packaging
+  script:
+    #Create a env file with the gitlab variables
+    # We dont need sudo with this image. Also it the command sudo isn't known in this image
+    - chmod +x ./setup_env.sh
+    - ./setup_env.sh
+    # using echo here for password cause https://stackoverflow.com/questions/51489359/docker-using-password-via-the-cli-is-insecure-use-password-stdin
+    - echo $CI_BUILD_TOKEN | docker login --username gitlab-ci-token --password-stdin registry.gitlab.com
+    - docker build -t registry.gitlab.com/devnik/laravel-api/$CI_COMMIT_REF_NAME .;
+    - docker push registry.gitlab.com/devnik/laravel-api/$CI_COMMIT_REF_NAME;
+  only:
+    - master
+
