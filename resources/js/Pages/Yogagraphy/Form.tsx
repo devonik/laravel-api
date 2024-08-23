@@ -8,7 +8,7 @@ import PrimaryButton from '@/components/PrimaryButton';
 import axios from 'axios';
 
 export default function Edit() {
-    const [apiResponse, setApiResponse] = useState({});
+    const [apiResponse, setApiResponse] = useState<{[key: string]: any}>({});
     const nameInput = useRef<HTMLInputElement>(null);
     const types = [{ text: 'Image', value: 'img' }, { text: 'Christmas card', value: 'card' }]
 
@@ -62,7 +62,7 @@ export default function Edit() {
 
                         {data.type === 'img' && (<div style={{marginTop: 5}}>
                             <InputLabel htmlFor="resolutionHeight">Choose the resolution (px) of each yogagraphy item (width and height will be equal). You can use &uarr; or &darr; on your keyboard</InputLabel>
-                            <TextInput id="resolutionHeight" name="resolutionHeight" value={data.resolutionHeight} type="number" min="50" max="1500" step="10" required onChange={(e) => setData('resolutionHeight', e.target.value)}></TextInput>
+                            <TextInput id="resolutionHeight" name="resolutionHeight" value={data.resolutionHeight} type="number" min="50" max="1500" step="10" required onChange={(e) => setData('resolutionHeight', parseInt(e.target.value))}></TextInput>
                         </div>)}
 
                         <InputLabel htmlFor="name" value="name" className="sr-only" />
