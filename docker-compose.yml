@@ -1,23 +1,35 @@
-version: '3'
-services:
+version: "3"
 
-  #Craft CMS
-  laravel-upljft-api:
-    image: 'registry.gitlab.com/devnik/laravel-api/main:latest'
-    container_name: laravel_api
-    restart: always
-    ports:
-      - '8000:8000'
-    tty: true
-    networks:
-      - proxy
-    environment:
-      TZ: Europe/Berlin
-      SERVICE_NAME: php
-      SERVICE_TAGS: dev
-
-#Docker Networks
 networks:
-  proxy:
-    external:
-      name: "traefik_proxy"
+  laravel:
+    driver: bridge
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "7000:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - .:/var/www/app:delegated
+    depends_on:
+      - php
+    networks:
+      - laravel
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php
+    restart: unless-stopped
+    tty: true
+    expose:
+      - "9000"
+    volumes:
+      - .:/var/www/app:delegated
+    networks:
+      - laravel
