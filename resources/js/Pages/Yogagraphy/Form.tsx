@@ -1,10 +1,9 @@
 
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler, useRef, useState } from 'react';
-import InputLabel from '@/Components/InputLabel';
-import TextInput from '@/Components/TextInput';
-import InputError from '@/Components/InputError';
-import { Button } from '@headlessui/react';
+import InputLabel from '../../components/InputLabel';
+import TextInput from '../../components/TextInput';
+import InputError from '../../components/InputError';
 import PrimaryButton from '@/components/PrimaryButton';
 import axios from 'axios';
 
