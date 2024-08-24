@@ -2,7 +2,7 @@ version: '3'
 services:
 
   laravel-api:
-    image: dragoono/laravel-api:1.0.1
+    image: dragoono/laravel-api:1.0.2
     container_name: laravel-api
     restart: always
     labels:
